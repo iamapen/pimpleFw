@@ -11,6 +11,11 @@
   },
   "config":{
     "vendor-dir": "vendor"
+  },
+  "autoload":{
+    "psr-4": {
+      "pimpleFw\\": "src/pimpleFw"
+    }
   }
 }
 
