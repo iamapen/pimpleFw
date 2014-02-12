@@ -6,9 +6,27 @@
 include_once realpath(__DIR__.'/../../vendor/autoload.php');
 
 use pimpleFw\Application;
+use pimpleFw\Renderer;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 $app = new Application();
+
+// レンダラ・globalなテンプレート変数
+$app->renderer = function(Application $app) {
+    $renderer = new Renderer(
+        array('template_dir'=>__DIR__.'/../templates')
+    );
+    $renderer->assign('app', $app);
+    $renderer->assign('server', $app->request->server->all());
+    return $renderer;
+};
+
+// レスポンスオブジェクトでレンダラから出力
+$app->render = $app->protect(function($templatePath, array $data=array(), $status=200, $headers=array()) use ($app){
+    $objRes = new Response($app->renderer->fetch($templatePath, $data), $status, $headers);
+    $objRes->send();
+});
 
 // リクエストオブジェクト
 $app->request = function(Application $app) {
