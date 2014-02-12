@@ -1,0 +1,122 @@
+<project name="Puyo" default="build" basedir=".">
+  <property name="report_dir" value="build"/>
+  <property name="source" value="src" />
+
+  <property name="php_bin" value="/usr/local/php-5.5.6/bin/php"/>
+  <property name="composer_bin" value="/usr/local/jenkins/lib/php/composer.phar"/>
+  <property name="phpunit" value="vendor/phpunit/phpunit/composer/bin/phpunit"/>
+
+  <property name="pdepend" value="/usr/local/jenkins/lib/php/utLib/vendor/pdepend/pdepend/src/bin/pdepend"/>
+  <property name="phpmd" value="/usr/local/jenkins/lib/php/utLib/vendor/phpmd/phpmd/src/bin/phpmd"/>
+  <property name="phpcpd" value="/usr/local/jenkins/lib/php/utLib/vendor/sebastian/phpcpd/composer/bin/phpcpd"/>
+  <property name="phploc" value="/usr/local/jenkins/lib/php/utLib/vendor/phploc/phploc/composer/bin/phploc"/>
+  <property name="phpcs" value="/usr/local/jenkins/lib/php/utLib/vendor/squizlabs/php_codesniffer/scripts/phpcs"/>
+  <property name="phpdoc" value="/usr/local/jenkins/lib/php/utLib/vendor/phpdocumentor/phpdocumentor/bin/phpdoc.php"/>
+  <property name="phpcb" value="/usr/local/jenkins/lib/php/utLib/vendor/covex-nn/phpcb/bin/phpcb"/>
+
+  <target name="clean" description="Clean up and create artifact directories">
+    <delete dir="${report_dir}/api" />
+    <delete dir="${report_dir}/code-browser" />
+    <delete dir="${report_dir}/coverage" />
+    <delete dir="${report_dir}/logs" />
+    <delete dir="${report_dir}/pdepend" />
+
+    <mkdir dir="${report_dir}/api" />
+    <mkdir dir="${report_dir}/code-browser" />
+    <mkdir dir="${report_dir}/coverage" />
+    <mkdir dir="${report_dir}/logs" />
+    <mkdir dir="${report_dir}/pdepend" />
+  </target>
+
+  <target name="composer-dev" description="install depend libraries">
+      <exec executable="${php_bin}" failonerror="true">
+          <arg path="${composer_bin}"/>
+          <arg value="install"/>
+          <arg value="--dev"/>
+      </exec>
+  </target>
+  <target name="composer" description="install depend libraries">
+      <exec executable="${php_bin}" failonerror="true">
+          <arg path="${composer_bin}"/>
+          <arg value="install"/>
+          <arg value="--no-dev"/>
+      </exec>
+  </target>
+  
+  <target name="phpunit" description="Run unit tests using PHPUnit and generates junit.xml and clover.xml">
+    <exec executable="${php_bin}" failonerror="true">
+      <arg path="${phpunit}"/>
+      <arg value="-c"/>
+      <arg path="./unittest/phpunit_ci.xml"/>
+      <arg path="./unittest/tests"/>
+    </exec>
+  </target>
+
+  <target name="parallelTasks" description="Run the pdepend, phpmd, phpcpd, phpcs, phpdoc and phploc tasks in parallel using a maximum of 2 threads.">
+    <parallel threadCount="2">
+      <sequential>
+        <antcall target="pdepend" />
+        <antcall target="phpmd" />
+      </sequential>
+      <antcall target="phpcpd" />
+      <antcall target="phpcs" />
+      <antcall target="phpdoc" />
+      <antcall target="phploc" />
+    </parallel>
+  </target>
+
+  <target name="pdepend" description="Generate jdepend.xml and software metrics charts using PHP_Depend">
+    <exec executable="${php_bin}">
+      <arg line="${pdepend} --jdepend-xml=${report_dir}/logs/jdepend.xml
+              --jdepend-chart=${report_dir}/pdepend/dependencies.svg
+              --overview-pyramid=${report_dir}/pdepend/overview-pyramid.svg
+              ${source}" />
+    </exec>
+  </target>
+
+  <target name="phpmd" description="Generate pmd.xml using PHPMD">
+    <exec executable="${php_bin}">
+      <arg line="${phpmd} ${source}
+              xml
+              codesize,design,naming,unusedcode
+              --reportfile ${report_dir}/logs/pmd.xml" />
+    </exec>
+  </target>
+
+  <target name="phpcpd" description="Generate pmd-cpd.xml using PHPCPD">
+    <exec executable="${php_bin}">
+      <arg line="${phpcpd} --log-pmd ${report_dir}/logs/pmd-cpd.xml ${source}" />
+    </exec>
+  </target>
+
+  <target name="phploc" description="Generate phploc.csv">
+    <exec executable="${php_bin}">
+      <arg line="${phploc} --log-csv ${report_dir}/logs/phploc.csv ${source}" />
+    </exec>
+  </target>
+
+  <target name="phpcs" description="Generate checkstyle.xml using PHP_CodeSniffer">
+    <exec executable="${php_bin}" output="/dev/null">
+      <arg line="${phpcs} --report=checkstyle
+              --report-file=${report_dir}/logs/checkstyle.xml
+              --standard=PSR1
+              ${source}" />
+    </exec>
+  </target>
+
+  <target name="phpdoc" description="Generate API documentation using PHPDocumentor">
+    <exec executable="${php_bin}">
+      <arg line="${phpdoc} -d ${source} -t ${report_dir}/api" />
+    </exec>
+  </target>
+
+  <target name="phpcb" description="Aggregate tool output with PHP_CodeBrowser">
+    <exec executable="${php_bin}">
+      <arg line="${phpcb} --log ${report_dir}/logs
+              --source ${source}
+              --output ${report_dir}/code-browser" />
+    </exec>
+  </target>
+
+  <target name="build" depends="clean,composer-dev,parallelTasks,phpunit,phpcb" />
+</project>
