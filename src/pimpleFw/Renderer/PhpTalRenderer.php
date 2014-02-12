@@ -134,7 +134,7 @@ class PhpTalRenderer implements RendererInterface {
                 $this->phptal->{$methodName}($value);
             }
         }
-        if(strpos($templatePath, '/') === 0) {
+        if((strpos($templatePath, '/') === 0) && $this->config('templateRepository') !== null) {
             $templatePath = substr($templatePath, 1);
         }
         $data = array_merge($this->data, $data);
