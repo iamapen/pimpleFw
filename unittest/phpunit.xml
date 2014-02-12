@@ -1,0 +1,34 @@
+<phpunit backupGlobals="false"
+    backupStaticAttributes="false"
+    bootstrap="bootstrap.php"
+    cacheTokens="true"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    forceCoversAnnotation="false"
+    mapTestClassNameToCoveredClassName="false"
+    processIsolation="false"
+    stopOnError="false"
+    stopOnFailure="false"
+    stopOnIncomplete="false"
+    stopOnSkipped="false"
+    strict="false"
+    verbose="true">
+
+  <php>
+    <var name="VARNAME" value="value"/>
+  </php>
+
+  <filter>
+    <blacklist>
+    </blacklist>
+    <whitelist>
+      <directory suffix=".php">../src</directory>
+      <exclude>
+        <directory>../src/dummyDir</directory>
+        <file>../src/dummyFile</file>
+      </exclude>
+    </whitelist>
+  </filter>
+</phpunit>

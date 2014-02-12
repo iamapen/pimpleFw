@@ -1,0 +1,7 @@
+#!/bin/bash
+
+[ -n "$PHP_BIN" ] && PHP_BIN=/usr/local/bin/php
+#PHPUNIT="C:/e43/workspace/utLib/vendor/phpunit/phpunit/composer/bin/phpunit"
+PHPUNIT="../vendor/bin/phpunit"
+
+$PHP_BIN $PHPUNIT $*

@@ -1,0 +1,43 @@
+<phpunit backupGlobals="false"
+    backupStaticAttributes="false"
+    bootstrap="bootstrap.php"
+    cacheTokens="true"
+    colors="false"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    forceCoversAnnotation="false"
+    mapTestClassNameToCoveredClassName="false"
+    processIsolation="false"
+    stopOnError="false"
+    stopOnFailure="false"
+    stopOnIncomplete="false"
+    stopOnSkipped="false"
+    strict="false"
+    verbose="true">
+
+  <php>
+    <var name="VARNAME" value="value"/>
+  </php>
+
+  <logging>
+      <log type="coverage-html" target="../build/coverage"
+          title="Puyo" charset="UTF-8"
+          yui="true" highlight="true"
+          lowUpperBound="35" highLowerBound="70"/>
+      <log type="coverage-clover" target="../build/logs/clover.xml"/>
+      <log type="junit" target="../build/logs/junit.xml"/>
+  </logging>
+
+  <filter>
+    <blacklist>
+    </blacklist>
+    <whitelist>
+      <directory suffix=".php">../src</directory>
+      <exclude>
+        <directory>../src/dummyDir</directory>
+        <file>../src/dummyFile</file>
+      </exclude>
+    </whitelist>
+  </filter>
+</phpunit>
