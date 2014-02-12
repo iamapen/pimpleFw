@@ -1,12 +1,11 @@
 <?php
-namespace pimpleFw;
+namespace pimpleFw\Renderer;
 
-class Renderer {
+class PhpRenderer implements RendererInterface {
+    use BasicTrait;
+
     /** @var array */
     private $config;
-
-    /** @var array */
-    private $data;
 
     public function __construct($config=array()) {
         $this->initialize($config);
@@ -64,24 +63,6 @@ class Renderer {
             return $this;
         }
         throw new \InvalidArgumentException('Invalid argument count.');
-    }
-
-    /**
-     * テンプレートに変数を割り当てる
-     * @param string $name
-     * @param mixed $value
-     */
-    public function assign($name, $value) {
-        $this->data[$name] = $value;
-    }
-
-    /**
-     * 出力
-     * @param unknown $templatePath
-     * @param array $data
-     */
-    public function render($templatePath, array $data) {
-        echo $this->fetch($templatePath, $data);
     }
 
     /**

@@ -3,8 +3,29 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "2ea51bbc28677b7f687bdbe62c18b400",
+    "hash": "8bef1e24c51811f0c80a8c6a4d4aa293",
     "packages": [
+        {
+            "name": "phptal/phptal",
+            "version": "1.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pornel/PHPTAL.git",
+                "reference": "master"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://github.com/pornel/PHPTAL/zipball/1.2.2",
+                "reference": null,
+                "shasum": null
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "PHPTAL": "classes/"
+                }
+            }
+        },
         {
             "name": "pimple/pimple",
             "version": "v2.0.0",

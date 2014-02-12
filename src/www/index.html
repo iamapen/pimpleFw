@@ -1,0 +1,27 @@
+<html>
+<body>
+<h1>俺のフレームワーク@<span tal:replace="server/HTTP_HOST">example.com</span></h1>
+
+<form method="post" tal:attributes="action server/REQUEST_URI">
+<ul tal:condition="php:count(errors) > 0">
+<li tal:repeat="error errors" tal:content="error">エラーメッセージ</li>
+</ul>
+
+<dl>
+<dt>名前</dt>
+<dd><input type="text" name="name" value="名前..." tal:attributes="value postData/name"/></dd>
+<dt>コメント</dt>
+<dd><textarea name="comment" tal:content="postData/comment">コメント内容...</textarea></dd>
+</dl>
+<input type="submit" value="送信"/>
+</form>
+
+<hr/>
+
+<ul>
+<li><a href="/">アプリケーション</a></li>
+<li><a href="/index.html">テンプレート</a></li>
+</ul>
+
+</body>
+</html>

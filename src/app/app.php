@@ -6,10 +6,11 @@
 include_once realpath(__DIR__.'/../../vendor/autoload.php');
 
 use pimpleFw\Application;
-use pimpleFw\Renderer;
+use pimpleFw\Renderer\PhpRenderer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use pimpleFw\Renderer\PhpTalRenderer;
 
 $app = new Application();
 
@@ -19,11 +20,23 @@ $app->request = function(Application $app) {
 };
 
 // Service: レンダラ
+// $app->renderer = function(Application $app) {
+//     $renderer = new PhpRenderer(
+//         array('template_dir'=>__DIR__.'/../templates')
+//     );
+//     // globalなテンプレート変数
+//     $renderer->assign('app', $app);
+//     $renderer->assign('server', $app->request->server->all());
+//     return $renderer;
+// };
 $app->renderer = function(Application $app) {
-    $renderer = new Renderer(
-        array('template_dir'=>__DIR__.'/../templates')
-    );
-    // globalなテンプレート変数
+    $renderer = new PhpTalRenderer([
+        'outputMode'            => \PHPTAL::XHTML,
+        'encoding'              => 'UTF-8',
+        'templateRepository'    => realpath(__DIR__.'/../www'),
+        'phpCodeDestination'    => sys_get_temp_dir(),
+        'forceReparse'          => true,
+    ]);
     $renderer->assign('app', $app);
     $renderer->assign('server', $app->request->server->all());
     return $renderer;
@@ -148,7 +161,10 @@ $app->run = $app->protect(function() use ($app){
        try {
            $response = $app->{$handlerName}($app, $method);
        } catch(\Exception $e) {
-           $response = new Response('Internal Server Error', 500);
+           $content = '<p>Internal Server Error</p>';
+           $content .= get_class($e) . "\n";
+           $content .= $e->getTraceAsString();
+           $response = new Response($content, 500);
        }
    }
    $response->send();
