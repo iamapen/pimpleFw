@@ -13,7 +13,7 @@ trait BasicTrait {
     }
 
     public function render($templatePath, array $data) {
-        echo $this->fetch($view, $data);
+        echo $this->fetch($templatePath, $data);
     }
 
     abstract public function fetch($templatePath, array $data);
