@@ -1,0 +1,16 @@
+{
+  "name": "pimpleFw",
+  "description":"",
+  "keywords":[],
+  "require":{
+    "php": ">=5.4",
+    "pimple/pimple": "2.0.0"
+  },
+  "require-dev":{
+    "phpunit/phpunit":"3.7.*"
+  },
+  "config":{
+    "vendor-dir": "vendor"
+  }
+}
+
