@@ -6,5 +6,5 @@ eclipse.preferences.version=1
 phpunit_config_file=
 preload_script=/pimpleFw/unittest/bootstrap.php
 test_file_pattern=
-test_folders=
+test_folders=/pimpleFw/unittest/tests
 testing_framework=PHPUnit
