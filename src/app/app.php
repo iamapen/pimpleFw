@@ -1,30 +1,42 @@
 <?php
-include_once realpath(__DIR__.'/../vendor/autoload.php');
+/**
+ * アプリケーション共通初期処理
+ */
+
+include_once realpath(__DIR__.'/../../vendor/autoload.php');
 
 use pimpleFw\Application;
+use Symfony\Component\HttpFoundation\Request;
 
 $app = new Application();
 
-// リクエスト変数を登録
-$app->findVar = $app->protect(function($key, $name, $default=null){
+// リクエストオブジェクト
+$app->request = function(Application $app) {
+    return Request::createFromGlobals();
+};
+
+// リクエスト変数を取得
+$app->findVar = $app->protect(function($key, $name, $default=null) use($app){
     $value = null;
-    switch($key) {
-        case 'G':
-            $value = isset($_GET[$name]) ? $_GET[$name] : null;
+    /* @var $objReq Request */
+    $objReq = $app->request;
+    switch ($key) {
+        case 'G':   // $_GET
+            $value = $objReq->query->get($name);
             break;
-        case 'P':
-            $value = isset($_POST[$name]) ? $_POST[$name] : null;
+        case 'P':   // $_POST
+            $value = $objReq->request->get($name);
             break;
-        case 'C':
-            $value = isset($_COOKIE[$name]) ? $_COOKIE[$name] : null;
+        case 'C':   // $_COOKIE
+            $value = $objReq->cookies->get($name);
             break;
-        case 'S':
-            $value = isset($_SERVER[$name]) ? $_SERVER[$name] : null;
+        case 'S':   // $_SERVER
+            $value = $objReq->server->get($name);
             break;
     }
     if(!isset($value) ||
         (is_string($value) && strlen($value) === 0) ||
-        (is_array($value) && count($value) === 0)
+        (is_array($value) && count($value) == 0)
     ) {
         $value = $default;
     }
@@ -72,36 +84,4 @@ $app->map = $app->protect(function($filter, $value) use ($app){
     return $filter($value);
 });
 
-
-$postData = array(
-    'name' => $app->findVar('P', 'name'),
-    'comment' => $app->findVar('P', 'comment'),
-);
-
-// ?name=<script>alert('hello')</script>]
-// ?name[]=foo&name[]=<script>alert('hello')</script>
-$name = $app->findVar('G', 'name');
-?>
-<html>
-<body>
-<h1>test</h1>
-
-<form method="post" action="<?=$app->escape($app->findVar('S', 'REQUEST_URI'))?>">
-<dl>
-<dt>名前</dt>
-<dd><input type="text" name="name" value="<?=$app->escape($postData['name'])?>">
-<dt>コメント</dt>
-<dd><textarea name="comment"><?=$app->escape($postData['comment'])?></textarea>
-</dl>
-<input type="submit" value="送信"/>
-</form>
-<hr>
-
-<dl>
-<dt>名前</dt>
-<dd><?=$app->escape($postData['name'])?></dd>
-<dt>コメント</dt>
-<dd><pre><?=$app->escape($postData['comment'])?></pre></dd>
-</dl>
-</body>
-</html>
+return $app;
