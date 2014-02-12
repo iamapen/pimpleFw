@@ -117,17 +117,17 @@ class PhpTalRenderer implements RendererInterface {
                     $msg = sprintf('The accessor method to "%s" is not defined.', $name);
                     throw new \InvalidArgumentException($msg);
                 }
-            }
-            switch($name) {
-            case 'phpCodeDestination':
-            case 'templateRepository':
-                if('\\' === DIRECTORY_SEPARATOR) {
-                    if(is_array($value)) {
-                        $value = array_map(function($v) {
-                            return str_replace('\\', '/', $v);
-                        }, $value);
-                    } else {
-                        $value = str_replace('\\', '/', $value);
+                switch($name) {
+                case 'phpCodeDestination':
+                case 'templateRepository':
+                    if('\\' === DIRECTORY_SEPARATOR) {
+                        if(is_array($value)) {
+                            $value = array_map(function($v) {
+                                return str_replace('\\', '/', $v);
+                            }, $value);
+                        } else {
+                            $value = str_replace('\\', '/', $value);
+                        }
                     }
                     break;
                 }
