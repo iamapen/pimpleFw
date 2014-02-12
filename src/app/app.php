@@ -9,29 +9,39 @@ use pimpleFw\Application;
 use pimpleFw\Renderer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 $app = new Application();
 
-// レンダラ・globalなテンプレート変数
+// Service: リクエストオブジェクト
+$app->request = function(Application $app) {
+    return Request::createFromGlobals();
+};
+
+// Service: レンダラ
 $app->renderer = function(Application $app) {
     $renderer = new Renderer(
         array('template_dir'=>__DIR__.'/../templates')
     );
+    // globalなテンプレート変数
     $renderer->assign('app', $app);
     $renderer->assign('server', $app->request->server->all());
     return $renderer;
 };
 
-// レスポンスオブジェクトでレンダラから出力
+// レスポンス作成
 $app->render = $app->protect(function($templatePath, array $data=array(), $status=200, $headers=array()) use ($app){
-    $objRes = new Response($app->renderer->fetch($templatePath, $data), $status, $headers);
-    $objRes->send();
+    return new Response($app->renderer->fetch($templatePath, $data), $status, $headers);
 });
 
-// リクエストオブジェクト
-$app->request = function(Application $app) {
-    return Request::createFromGlobals();
-};
+// リダイレクトレスポンス作成
+$app->redirect = $app->protect(function($url, $status=303, $headers=array()) use($app){
+    $navigate = $url;
+    if(false === strpos($url, '://')) {
+        $navigate = $app->request->getSchemeAndHttpHost() . $url;
+    }
+    return new RedirectResponse($navigate, $status, $headers);
+});
 
 // リクエスト変数を取得
 $app->findVar = $app->protect(function($key, $name, $default=null) use($app){
@@ -100,6 +110,48 @@ $app->map = $app->protect(function($filter, $value) use ($app){
         return $results;
     }
     return $filter($value);
+});
+
+/*
+ * リクエストハンドラ登録
+ * 引数で指定されたHTTPメソッドに対応するコールバックを生成、onXXX()として登録。
+ * @param string $allowableMethod HTTPメソッドの '|' 区切り
+ * @param Closure $function 処理
+ */
+$app->on = $app->protect(function($allowableMethod, $function) use ($app){
+    $allowableMethods = explode('|', $allowableMethod);
+    $handler = $app->protect(function(Application $app, $method) use ($function) {
+        return $function($app, $method);
+    });
+
+    if(in_array('GET', $allowableMethods)) {
+        $app->onGet = $handler;
+    }
+    if(in_array('POST', $allowableMethods)) {
+        $app->onPost = $handler;
+    }
+    if(in_array('PUT', $allowableMethods)) {
+        $app->onPut = $handler;
+    }
+    if(in_array('DELETE', $allowableMethods)) {
+        $app->onDelete = $handler;
+    }
+});
+
+// アプリケーション実行
+$app->run = $app->protect(function() use ($app){
+   $method = $app->request->getMethod();
+   $handlerName = 'on' . ucfirst(strtolower($method));
+   if(!$app->offsetExists($handlerName)) {
+       $response = new Response('Method Not Allowed', 405);
+   } else {
+       try {
+           $response = $app->{$handlerName}($app, $method);
+       } catch(\Exception $e) {
+           $response = new Response('Internal Server Error', 500);
+       }
+   }
+   $response->send();
 });
 
 return $app;

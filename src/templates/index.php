@@ -3,6 +3,14 @@
 <h1>俺のフレームワーク@<?=$app->escape($server['HTTP_HOST'])?></h1>
 
 <form method="post" action="<?=$app->escape($server['REQUEST_URI'])?>">
+<?php if(count($errors) > 0):?>
+<ul>
+<?php foreach($errors as $error):?>
+<li><?=$app->escape($error)?></li>
+<?php endforeach;?>
+</ul>
+<?php endif?>
+
 <dl>
 <dt>名前</dt>
 <dd><input type="text" name="name" value="<?=$app->escape($postData['name'])?>"></dd>
