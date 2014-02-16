@@ -4,7 +4,7 @@ namespace pimpleFw;
 class HttpException extends \RuntimeException {
     /**
      * HTTPステータスコード + メッセージ定義
-     * @var string[] 
+     * @var string[]
      * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xml
      */
     private static $statuses = array(
@@ -71,10 +71,10 @@ class HttpException extends \RuntimeException {
         510 => 'Not Extended',
         511 => 'Network Authentication Required',
     );
-    
+
     private $headers;
     private $statusMessage;
-    
+
     public function __construct($code=null, $headers=null, $message=null) {
         if(!array_key_exists($code, static::$statuses)) {
             throw new \InvalidArgumentException(
@@ -84,11 +84,11 @@ class HttpException extends \RuntimeException {
         $code = $code ?: 500;
         $this->headers = $headers ?: [];
         $this->statusMessage = $this->buildStatusMessage($code);
-        
+
         $message = $message ?: $this->statusMessage;
         parent::__construct($message, $code);
     }
-    
+
     public function getHeaders() {
         return $this->headers;
     }
