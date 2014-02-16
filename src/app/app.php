@@ -6,6 +6,8 @@
 include_once realpath(__DIR__.'/../../vendor/autoload.php');
 
 use pimpleFw\Application;
+use pimpleFw\Configuration;
+use pimpleFw\HttpException;
 use pimpleFw\Renderer\PhpRenderer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,7 +36,8 @@ $app->renderer = function(Application $app) {
         'outputMode'            => \PHPTAL::XHTML,
         'encoding'              => 'UTF-8',
         'templateRepository'    => realpath(__DIR__.'/../www'),
-        'phpCodeDestination'    => sys_get_temp_dir(),
+//         'phpCodeDestination'    => sys_get_temp_dir(),
+        'phpCodeDestination'    => realpath(__DIR__.'/../../cache'),
         'forceReparse'          => true,
     ]);
     $renderer->assign('app', $app);
@@ -42,9 +45,27 @@ $app->renderer = function(Application $app) {
     return $renderer;
 };
 
+// 設定オブジェクト
+$app->config = new Configuration([
+    'debug'         => true,
+    'app_root'      => __DIR__,
+    'web_root'      => realpath(__DIR__.'/../www'),
+    'log_dir'       => realpath(__DIR__.'/../../logs'),
+    'log_file'      => date('Y-m').'.log',
+    'error_log'     => function($config){ return $config['log_dir'].'/'.$config['log_file']; },
+    'error_view'    => 'error.html',
+]);
+
+
 // レスポンス作成
 $app->render = $app->protect(function($templatePath, array $data=array(), $status=200, $headers=array()) use ($app){
     return new Response($app->renderer->fetch($templatePath, $data), $status, $headers);
+});
+
+// HTTPエラーを返す
+$app->abort = $app->protect(
+    function($statusCode = 500, $message = null, $headers = array()) use ($app) {
+        throw new HttpException($statusCode, $headers, $message);
 });
 
 // リダイレクトレスポンス作成
@@ -153,21 +174,49 @@ $app->on = $app->protect(function($allowableMethod, $function) use ($app){
 
 // アプリケーション実行
 $app->run = $app->protect(function() use ($app){
-   $method = $app->request->getMethod();
-   $handlerName = 'on' . ucfirst(strtolower($method));
-   if(!$app->offsetExists($handlerName)) {
-       $response = new Response('Method Not Allowed', 405);
-   } else {
-       try {
-           $response = $app->{$handlerName}($app, $method);
-       } catch(\Exception $e) {
-           $content = '<p>Internal Server Error</p>';
-           $content .= get_class($e) . "\n";
-           $content .= $e->getTraceAsString();
-           $response = new Response($content, 500);
-       }
-   }
-   $response->send();
+    // すべてのエラーを例外にする
+    error_reporting(E_ALL);
+    set_error_handler(function($errno, $errstr, $errfile, $errline) {
+        throw new \ErrorException($errstr, $errno, 0, $errfile, $errline);
+    });
+
+    try {
+        $method = $app->request->getMethod();
+        $handlerName = 'on' . ucfirst(strtolower($method));
+        if(!$app->offsetExists($handlerName)) {
+            throw new HttpException(405);
+        }
+        $response = $app->{$handlerName}($app, $method);
+    } catch(\Exception $e) {
+        var_dump($e->getMessage());
+        error_log(sprintf("[%s] %s\n", date('Y-m-d H:i:s'), (string)$e),
+            3, $app->config->error_log
+        );
+        $statusCode = 500;
+        $statusMessage = null;
+        $message = null;
+        $headers = [];
+
+        if($e instanceof  HttpException) {
+            $statusCode = $e->getCode();
+            $statusMessage = $e->getStatusMessage();
+            $message = $e->getMessage();
+            $headers = $e->getHeaders();
+        }
+        $assignVars = [
+                'title' => 'エラーが発生しました',
+                'statusMessage' => $statusMessage,
+                'message'       => $message,
+                'exception'     => $e,
+                'exception_class'   => get_class($e),
+        ];
+        $response = $app->render($app->config->error_view,
+            $assignVars,
+            $statusCode,
+            $headers
+        );
+    }
+    $response->send();
 });
 
 return $app;

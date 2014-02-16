@@ -1,27 +1,94 @@
-<html>
-<body>
-<h1>俺のフレームワーク@<span tal:replace="server/HTTP_HOST">example.com</span></h1>
+<!DOCTYPE html>
+<html lang="ja">
 
-<form method="post" tal:attributes="action server/REQUEST_URI">
-<ul tal:condition="php:count(errors) > 0">
-<li tal:repeat="error errors" tal:content="error">エラーメッセージ</li>
-</ul>
+<head metal:use-macro="layout.html/head">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+<link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.min.css" />
+<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css" />
+<title>投稿フォーム</title>
+</head>
 
-<dl>
-<dt>名前</dt>
-<dd><input type="text" name="name" value="名前..." tal:attributes="value postData/name"/></dd>
-<dt>コメント</dt>
-<dd><textarea name="comment" tal:content="postData/comment">コメント内容...</textarea></dd>
-</dl>
-<input type="submit" value="送信"/>
-</form>
+<body metal:use-macro="layout.html/body">
 
-<hr/>
+<div class="container-fluid">
 
-<ul>
-<li><a href="/">アプリケーション</a></li>
-<li><a href="/index.html">テンプレート</a></li>
-</ul>
+  <header class="header">
+    <h1>投稿フォーム@example.com</h1>
+  </header>
+
+  <div class="content" metal:fill-slot="content">
+
+    <div class="alert alert-error" tal:condition="php:count(errors) > 0">
+      <button class="close" data-dismiss="alert">×</button>
+      <span class="icon-warning-sign"></span><strong>入力値にエラーがあります</strong>
+      <ul>
+        <li tal:repeat="error errors" tal:content="error">名前を入力してください。</li>
+      </ul>
+    </div>
+
+    <form class="form-horizontal" method="post" tal:attributes="action server/REQUEST_URI">
+      <fieldset>
+        <legend><span class="icon-envelope"></span>投稿フォーム</legend>
+        <dl class="control-group" tal:attributes="class php:isset(errors['name']) ? 'control-group error' : 'control-group'">
+          <dt class="control-label">名前</dt>
+          <dd class="controls">
+            <input type="text" name="name" class="input-xlarge" tal:attributes="value postData/name" />
+          </dd>
+        </dl>
+        <dl class="control-group" tal:attributes="class php:isset(errors['comment']) ? 'control-group error' : 'control-group'">
+          <dt class="control-label">コメント</dt>
+          <dd class="controls">
+            <textarea name="comment" rows="5" class="input-xlarge" tal:content="postData/comment">コメント内容....</textarea>
+          </dd>
+        </dl>
+        <div class="form-actions">
+          <input type="submit" value="送信" class="btn btn-primary btn-large" />
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="icon-wrench"></span>設定値/エラーのテスト</legend>
+        <dl class="control-group">
+          <dt class="control-label">デバッグ設定</dt>
+          <dd class="controls">
+            <label class="checkbox">
+              <input type="checkbox" name="enable_debug" value="1" tal:attributes="checked exists:postData/enable_debug" />
+              有効にする
+            </label>
+          </dd>
+        </dl>
+        <dl class="control-group">
+          <dt class="control-label">ログディレクトリ設定</dt>
+          <dd class="controls">
+            <label class="checkbox">
+              <input type="checkbox" name="move_log_dir" value="1" tal:attributes="checked exists:postData/move_log_dir" />
+              ドキュメントルートに変更する
+            </label>
+          </dd>
+        </dl>
+        <div class="form-actions">
+          <input type="submit" value="PHPエラー(Notice)" class="btn btn-primary btn-danger" name="trigger-notice" />
+          <input type="submit" value="PHPエラー(Warning)" class="btn btn-primary btn-danger" name="trigger-warning" />
+          <input type="submit" value="PHPエラー(Error)" class="btn btn-primary btn-danger" name="trigger-error" />
+          <input type="submit" value="HTTP例外(400)" class="btn btn-primary btn-danger" name="throw-http-exception-400" />
+          <input type="submit" value="HTTP例外(403)" class="btn btn-primary btn-danger" name="throw-http-exception-403" />
+          <input type="submit" value="HTTP例外(404)" class="btn btn-primary btn-danger" name="throw-http-exception-404" />
+          <input type="submit" value="HTTP例外(405)" class="btn btn-primary btn-danger" name="throw-http-exception-405" />
+          <input type="submit" value="RuntimeException" class="btn btn-primary btn-danger" name="throw-runtime-exception" />
+        </div>
+      </fieldset>
+
+    </form>
+
+  </div>
+
+  <footer class="footer">
+    <p>Copyright &copy; 2013 k-holy &lt;k.holy74@gmail.com&gt; Code licensed under <a href="http://opensource.org/licenses/MIT">MIT</a></p>
+  </footer>
+
+</div>
 
 </body>
 </html>
